@@ -1,0 +1,10 @@
+body { background: #121212; color: #eeeeee; font-family: sans-serif; }
+a { color: #9ecbff; }
+input, select, button { background: #1e1e1e; color: #eeeeee; }
+
+/* Print fix (from PR #2 review): reports must print on a light background */
+@media print {
+  body { background: #ffffff; color: #000000; }
+  a { color: #000000; }
+  input, select, button { background: #ffffff; color: #000000; }
+}
