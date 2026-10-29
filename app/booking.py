@@ -28,15 +28,23 @@ def _booked_count(conn, doctor_id, date_str, time_slot):
     return row["n"]
 
 
+def validate_slot(conn, doctor_id, date_str, time_slot):
+    """Return None when the slot can be booked, otherwise the reason."""
+    capacity = _slot_capacity(conn, doctor_id, date_str)
+    if capacity is None:
+        return "DoctorUnavailable"
+    if _booked_count(conn, doctor_id, date_str, time_slot) >= capacity:
+        return "SlotFull"
+    return None
+
+
 def book_appointment(conn, patient_id, doctor_id, date_str, time_slot,
                      appt_type, notifier=None):
     spec = AppointmentFactory.create(appt_type)
 
-    capacity = _slot_capacity(conn, doctor_id, date_str)
-    if capacity is None:
-        return BookingResult("DoctorUnavailable")
-    if _booked_count(conn, doctor_id, date_str, time_slot) >= capacity:
-        return BookingResult("SlotFull")
+    problem = validate_slot(conn, doctor_id, date_str, time_slot)
+    if problem is not None:
+        return BookingResult(problem)
 
     cur = conn.execute(
         "INSERT INTO appointments (patient_id, doctor_id, date, time_slot, type,"
