@@ -33,3 +33,17 @@ def doctor(conn):
 def patient(conn):
     return register_user(conn, "Karim", "karim@mail.com", "secret1",
                          role="patient", phone="01700000000")
+
+
+@pytest.fixture()
+def gateway_ok():
+    g = Mock()
+    g.charge.return_value = True
+    return g
+
+
+@pytest.fixture()
+def gateway_fail():
+    g = Mock()
+    g.charge.return_value = False
+    return g

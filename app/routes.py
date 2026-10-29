@@ -4,6 +4,7 @@ from flask import (Blueprint, render_template, request, redirect,
 from .database import Database
 from .services import register_user, authenticate, search_doctors
 from .booking import book_appointment
+from .payments import ManualGateway
 from .notifications import NotificationService, EmailNotifier, SMSNotifier
 
 bp = Blueprint("main", __name__)
@@ -71,7 +72,7 @@ def book(doctor_id):
         notifier.subscribe(SMSNotifier(conn()))
         result = book_appointment(conn(), session["user_id"], doctor_id,
                                   request.form["date"], request.form["time_slot"],
-                                  request.form["type"], notifier)
+                                  request.form["type"], ManualGateway(), notifier)
         flash(f"Booking result: {result.status}")
     return render_template("book.html", doctor=doctor, result=result)
 
