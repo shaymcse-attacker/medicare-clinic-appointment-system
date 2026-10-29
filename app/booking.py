@@ -29,7 +29,7 @@ def _booked_count(conn, doctor_id, date_str, time_slot):
 
 
 def book_appointment(conn, patient_id, doctor_id, date_str, time_slot,
-                     appt_type, notifier=None):
+                     appt_type, gateway, notifier=None):
     spec = AppointmentFactory.create(appt_type)
 
     capacity = _slot_capacity(conn, doctor_id, date_str)
@@ -40,12 +40,26 @@ def book_appointment(conn, patient_id, doctor_id, date_str, time_slot,
 
     cur = conn.execute(
         "INSERT INTO appointments (patient_id, doctor_id, date, time_slot, type,"
-        " duration_min, fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Confirmed')",
+        " duration_min, fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')",
         (patient_id, doctor_id, date_str, time_slot, spec.type,
          spec.duration_min, spec.fee),
     )
     conn.commit()
     appt_id = cur.lastrowid
+
+    paid = gateway.charge(spec.fee)
+    pay_status = "Paid" if paid else "Failed"
+    conn.execute(
+        "INSERT INTO payments (appointment_id, amount, method, status) VALUES (?, ?, 'card', ?)",
+        (appt_id, spec.fee, pay_status),
+    )
+    if not paid:
+        conn.execute("UPDATE appointments SET status = 'PaymentFailed' WHERE id = ?", (appt_id,))
+        conn.commit()
+        return BookingResult("PaymentFailed", appt_id, spec.fee)
+
+    conn.execute("UPDATE appointments SET status = 'Confirmed' WHERE id = ?", (appt_id,))
+    conn.commit()
 
     if notifier is not None:
         msg = (f"Appointment #{appt_id} confirmed for {date_str} at {time_slot} "
