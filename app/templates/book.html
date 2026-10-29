@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Book appointment with {{ doctor.name }}</h1>
+<form method="post">
+  <label>Date <input name="date" type="date" required></label><br>
+  <label>Time slot <input name="time_slot" value="10:00" required></label><br>
+  <label>Type
+    <select name="type">
+      <option>regular</option><option>follow-up</option><option>emergency</option>
+    </select>
+  </label><br>
+  <button type="submit">Confirm booking</button>
+</form>
+{% if result %}<p>Result: {{ result.status }} (fee {{ result.fee }})</p>{% endif %}
+{% endblock %}

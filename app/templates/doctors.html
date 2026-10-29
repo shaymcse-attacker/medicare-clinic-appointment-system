@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Doctors</h1>
+<form method="get">
+  <input name="specialization" placeholder="Specialization">
+  <button type="submit">Search</button>
+</form>
+<ul>
+{% for d in doctors %}
+  <li>{{ d.name }} — {{ d.specialization }} ({{ d.chamber }})
+      <a href="/book/{{ d.id }}">Book</a></li>
+{% endfor %}
+</ul>
+{% endblock %}
